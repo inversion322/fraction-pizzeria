@@ -1,6 +1,34 @@
 export type Level = 1 | 2 | 3
 
-export type TaskType = 'choice' | 'slice' | 'fraction' | 'explain'
+export type TaskType = 'choice' | 'slice' | 'fraction' | 'puzzle'
+
+/** A fraction piece in a puzzle; ids are unique even when values repeat (two 1/8 pieces). */
+export interface PuzzlePiece {
+  id: string
+  value: string // "3/4" or "1 1/2"
+}
+
+/** Level 1: line the pieces up from the smallest to the largest. */
+export interface OrderPuzzle {
+  kind: 'order'
+  pieces: PuzzlePiece[]
+}
+
+/** Level 2: pick pieces that add up to exactly one whole pizza. */
+export interface WholePuzzle {
+  kind: 'whole'
+  pieces: PuzzlePiece[]
+  solution: string[] // piece ids shown when the answer is revealed
+}
+
+/** Level 3: put every order into the box with the equal fraction. */
+export interface BoxesPuzzle {
+  kind: 'boxes'
+  items: Array<PuzzlePiece & { box: string }>
+  boxes: string[]
+}
+
+export type Puzzle = OrderPuzzle | WholePuzzle | BoxesPuzzle
 
 export type MisconceptionCode =
   | 'DENOM_BIGGER'
@@ -39,7 +67,7 @@ export interface Task {
   hint: string
   explain: string
   solution: string
-  referenceIdea?: string
+  puzzle?: Puzzle
   options?: ChoiceOption[]
   answer?: string
   sliceAnswer?: { cuts: number; selected: number }
@@ -59,7 +87,8 @@ export interface TaskResult {
   usedHint: boolean
   earnedCoins: number
   misconceptions: MisconceptionCode[]
-  explanation?: string
+  /** Puzzle moves in plain words, for the AI review (e.g. «поставил 1/4 раньше 1/6»). */
+  moves?: string[]
 }
 
 export interface StoredProgress {
@@ -68,10 +97,11 @@ export interface StoredProgress {
   queueIds: string[]
   coins: number
   results: TaskResult[]
+  /** True while the current shift was started from scratch (counts for the chef chat). */
+  fresh?: boolean
 }
 
-export interface ExplainResult {
-  verdict: 'correct' | 'partial' | 'incorrect'
+export interface PuzzleReview {
   feedback: string
   misconception?: MisconceptionCode
   source: 'ai' | 'fallback'

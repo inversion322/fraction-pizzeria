@@ -1,25 +1,72 @@
+import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
 import { ChefTosha } from './ChefTosha'
-import { Icon } from './Icon'
+import { Icon, type IconName } from './Icon'
+import { MathText } from './Frac'
 
-export function FeedbackPanel({ kind, title, text, detail, actionLabel, onAction, coinGain, loading = false }: { kind: 'correct' | 'almost' | 'solution' | 'ai'; title: string; text: string; detail?: string; actionLabel: string; onAction: () => void; coinGain?: number; loading?: boolean }) {
-  const palette = kind === 'correct' ? 'border-[#b9dfc5] bg-[#f3fbf4]' : kind === 'almost' ? 'border-[#f2c0ae] bg-[#fff5f0]' : kind === 'solution' ? 'border-[#e7d29a] bg-[#fffaf0]' : 'border-[#c7d8ed] bg-[#f4f8fe]'
+export type FeedbackKind = 'correct' | 'almost' | 'solution' | 'ai'
+
+const LOOK: Record<FeedbackKind, { band: string; badge: string; icon: IconName; mood: 'happy' | 'calm' | 'thinking' }> = {
+  correct: { band: 'bg-basil-soft', badge: 'bg-basil text-white', icon: 'check', mood: 'happy' },
+  almost: { band: 'bg-tomato-soft', badge: 'bg-tomato text-white', icon: 'bulb', mood: 'calm' },
+  solution: { band: 'bg-cheese-soft', badge: 'bg-cheese text-ink', icon: 'book', mood: 'calm' },
+  ai: { band: 'bg-sunk', badge: 'bg-ink text-white', icon: 'message', mood: 'thinking' },
+}
+
+/** Bottom sheet with Chef Tosha's verdict. Stays in view on phones, never covers the top bar. */
+export function FeedbackPanel({ kind, title, text, detail, actionLabel, onAction, coinGain, loading = false }: {
+  kind: FeedbackKind
+  title: string
+  text: string
+  detail?: string
+  actionLabel: string
+  onAction: () => void
+  coinGain?: number
+  loading?: boolean
+}) {
+  const look = LOOK[kind]
+  const actionRef = useRef<HTMLButtonElement>(null)
+  useEffect(() => { if (!loading) actionRef.current?.focus({ preventScroll: true }) }, [loading, kind])
+
   return (
-    <section className={`feedback-in paper-card ${palette} relative overflow-hidden p-5 sm:p-6`} aria-live="polite">
-      <div className="flex items-start gap-3 sm:gap-4">
-        <ChefTosha compact />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-xl font-black text-[#3D2A20]">{title}</h3>
-            {coinGain ? <span className="coin-pop inline-flex items-center gap-1 font-black text-[#C69019]">+{coinGain} <span aria-hidden="true">●</span></span> : null}
-          </div>
-          {loading ? <div className="mt-3 space-y-2"><div className="h-3 w-11/12 animate-pulse rounded-full bg-[#d9e4f1]" /><div className="h-3 w-8/12 animate-pulse rounded-full bg-[#d9e4f1]" /></div> : <p className="mt-2 text-base leading-6 text-[#5e493c]">{text}</p>}
-          {detail && !loading ? <p className="mt-3 rounded-xl bg-white/70 p-3 text-sm font-bold leading-5 text-[#6d5546]">{detail}</p> : null}
-          <button type="button" disabled={loading} onClick={onAction} className="mt-5 inline-flex min-h-[48px] items-center gap-2 rounded-xl bg-[#D94F3D] px-5 py-3 text-sm font-black text-white shadow-[0_4px_0_#AC382B] transition hover:-translate-y-0.5 hover:bg-[#c94535] disabled:cursor-wait disabled:opacity-60">
-            {actionLabel} <Icon name="arrow" size={17} />
+    <motion.section
+      initial={{ y: '110%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '110%', transition: { duration: 0.2, ease: [0.4, 0, 1, 1] } }}
+      transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-2xl px-0 sm:bottom-4 sm:px-4"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="overflow-hidden rounded-t-[28px] bg-surface shadow-lg ring-1 ring-ink/5 sm:rounded-[28px]">
+        <div className={`flex items-center gap-3 px-5 py-3.5 sm:px-6 ${look.band}`}>
+          <ChefTosha size={44} mood={look.mood} />
+          <h3 className="flex-1 font-display text-lg font-bold leading-tight text-ink sm:text-xl">{title}</h3>
+          {coinGain ? (
+            <motion.span initial={{ scale: 0.4, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 18, delay: 0.15 }}
+              className="inline-flex items-center gap-1 rounded-full bg-cheese px-3 py-1 font-display text-sm font-semibold tabular text-ink">
+              +{coinGain} <Icon name="coin" size={16} />
+            </motion.span>
+          ) : <span className={`flex h-9 w-9 items-center justify-center rounded-full ${look.badge}`} aria-hidden="true"><Icon name={look.icon} size={19} strokeWidth={2.3} /></span>}
+        </div>
+        <div className="px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pb-6">
+          {loading ? (
+            <div className="space-y-2.5 py-1" aria-label="Шеф читает ответ">
+              <div className="h-3.5 w-11/12 animate-pulse rounded-full bg-sunk" />
+              <div className="h-3.5 w-7/12 animate-pulse rounded-full bg-sunk" />
+            </div>
+          ) : (
+            <>
+              <p className="text-pretty text-[1.05rem] font-semibold leading-relaxed text-ink-2"><MathText>{text}</MathText></p>
+              {detail && <p className="mt-3 rounded-2xl bg-sunk/70 px-4 py-3 text-pretty text-base font-bold leading-relaxed text-ink"><MathText>{detail}</MathText></p>}
+            </>
+          )}
+          <button ref={actionRef} type="button" disabled={loading} onClick={onAction}
+            className="mt-4 inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-ink px-6 font-display text-base font-semibold text-surface transition-[background-color,transform] duration-150 ease-out hover:bg-ink/90 active:scale-[0.98] disabled:cursor-wait disabled:opacity-50 sm:w-auto">
+            {actionLabel} <Icon name="arrow" size={18} />
           </button>
         </div>
-        <span className={`hidden shrink-0 rounded-full p-2 sm:flex ${kind === 'correct' ? 'bg-[#DFF2E3] text-[#4D8B68]' : kind === 'almost' ? 'bg-[#FCE5D9] text-[#D36A4E]' : 'bg-white text-[#D94F3D]'}`} aria-hidden="true"><Icon name={kind === 'correct' ? 'check' : kind === 'ai' ? 'sparkle' : 'bulb'} size={22} /></span>
       </div>
-    </section>
+    </motion.section>
   )
 }

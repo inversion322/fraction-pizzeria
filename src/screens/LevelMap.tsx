@@ -1,15 +1,72 @@
+import { motion } from 'framer-motion'
 import type { Level, TaskResult } from '../types'
 import { levelInfo } from '../data/tasks'
 import { Icon } from '../components/Icon'
+import { Pizza } from '../components/Pizza'
 
-export function LevelMap({ results, coins, onSelectLevel, onRestart }: { results: TaskResult[]; coins: number; onSelectLevel: (level: Level) => void; onRestart: () => void }) {
-  const getCount = (level: Level) => results.filter((result) => result.level === level).length
-  const unlocked = (level: Level) => level === 1 || getCount((level - 1) as Level) === 4
+const PER_LEVEL = 4
+
+export function LevelMap({ results, onSelectLevel, onRestart, onReport }: { results: TaskResult[]; onSelectLevel: (level: Level) => void; onRestart: () => void; onReport: () => void }) {
+  const done = (level: Level) => results.filter((result) => result.level === level).length
+  const unlocked = (level: Level) => level === 1 || done((level - 1) as Level) >= PER_LEVEL
+  const allDone = ([1, 2, 3] as Level[]).every((level) => done(level) >= PER_LEVEL)
+  const total = results.length
+
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-12 pt-6 sm:px-8 sm:pt-10 lg:px-12">
-      <div className="flex flex-wrap items-end justify-between gap-5"><div><p className="eyebrow">карта смены</p><h1 className="mt-2 text-4xl font-black tracking-tight text-[#3D2A20]">Выбирай следующий заказ</h1><p className="mt-3 max-w-xl text-base leading-7 text-[#8C776B]">Уровни открываются по очереди. В каждом — четыре заказа и новые кухонные навыки.</p></div><div className="flex items-center gap-3 rounded-2xl bg-[#FFF7D7] px-4 py-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#F6C64C] text-[#8A6419]">●</span><div><p className="text-[10px] font-black uppercase tracking-[.12em] text-[#9A7625]">твои монетки</p><p className="text-xl font-black text-[#3D2A20]">{coins}</p></div></div></div>
-      <div className="mt-9 grid gap-4 lg:grid-cols-3">{([1, 2, 3] as Level[]).map((level) => { const info = levelInfo[level]; const count = getCount(level); const isUnlocked = unlocked(level); const complete = count === 4; return <button key={level} type="button" disabled={!isUnlocked} onClick={() => onSelectLevel(level)} className={`group relative overflow-hidden rounded-[24px] border-2 p-5 text-left transition ${isUnlocked ? 'border-[#eadac8] bg-[#fffdf8] hover:-translate-y-1 hover:border-[#D94F3D] hover:shadow-[0_12px_25px_rgba(103,69,48,.1)]' : 'border-[#eadac8]/60 bg-[#F7EFE5] opacity-75'}`}><div className="flex items-start justify-between"><span className={`flex h-12 w-12 items-center justify-center rounded-2xl text-xl font-black ${complete ? 'bg-[#EAF6ED] text-[#4D8B68]' : isUnlocked ? 'bg-[#FFF0EB] text-[#D94F3D]' : 'bg-[#EDE1D5] text-[#B7A393]'}`}>{isUnlocked ? info.icon : <Icon name="lock" size={20} />}</span><span className="rounded-full bg-[#FFF7D7] px-3 py-1 text-xs font-black text-[#8A6419]">уровень {level}</span></div><h2 className="mt-5 text-2xl font-black text-[#3D2A20]">{info.name}</h2><p className="mt-2 min-h-[48px] text-sm leading-6 text-[#8C776B]">{info.description}</p><div className="mt-6 flex items-center gap-3"><div className="h-2 flex-1 overflow-hidden rounded-full bg-[#F0E2D3]"><div className="h-full rounded-full bg-[#4D8B68] transition-all" style={{ width: `${count / 4 * 100}%` }} /></div><span className="text-sm font-black text-[#3D2A20]">{count}/4</span></div><div className="mt-5 flex items-center justify-between text-xs font-extrabold text-[#8C776B]"><span>{complete ? 'Уровень пройден' : isUnlocked ? 'Открыто' : 'Сначала пройди предыдущий'}</span><span className="text-[#C69019]">● {results.filter((result) => result.level === level).reduce((sum, result) => sum + result.earnedCoins, 0)} монет</span></div></button> })}</div>
-      <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-[#e3cdb8] p-4"><p className="text-sm font-bold text-[#8C776B]">Прогресс сохраняется автоматически на этом устройстве.</p><button type="button" onClick={onRestart} className="inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-[#D94F3D] transition hover:bg-[#FFF0EB]"><Icon name="refresh" size={17} /> Начать заново</button></div>
+    <main className="mx-auto max-w-3xl px-4 pb-12 pt-4 sm:px-8 sm:pt-8">
+      <h1 className="font-display text-[2rem] font-bold leading-[1.1] tracking-[-0.02em] text-ink sm:text-5xl">Твоя смена</h1>
+      <p className="mt-3 max-w-xl text-pretty text-lg font-semibold leading-relaxed text-ink-2">
+        {total === 0 ? 'Три уровня по четыре заказа. Начни с первого, следующие откроются по очереди.'
+          : allDone ? 'Все заказы выполнены. Шеф уже подготовил разбор смены.'
+            : `Выполнено ${total} из 12 заказов. Продолжай с того же места.`}
+      </p>
+
+      <ol className="mt-8 space-y-4">
+        {([1, 2, 3] as Level[]).map((level, index) => {
+          const info = levelInfo[level]
+          const count = done(level)
+          const open = unlocked(level)
+          const complete = count >= PER_LEVEL
+          const coins = results.filter((result) => result.level === level).reduce((sum, result) => sum + result.earnedCoins, 0)
+          const action = complete ? 'Пройти ещё раз' : count > 0 ? 'Продолжить' : 'Начать'
+          return (
+            <motion.li key={level} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.07, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}>
+              <button type="button" disabled={!open} onClick={() => onSelectLevel(level)}
+                className={`group flex w-full items-center gap-4 rounded-[26px] p-4 text-left transition-[box-shadow,background-color] duration-200 ease-out sm:gap-6 sm:p-5 ${open ? 'bg-surface shadow-md ring-1 ring-ink/5 hover:shadow-lg' : 'bg-sunk/70'}`}>
+                <div className={`shrink-0 transition-transform duration-300 ease-out ${open ? 'group-hover:rotate-[-8deg]' : 'opacity-60 grayscale'}`}>
+                  <Pizza cuts={PER_LEVEL} filled={count} toppings={count > 0} size={84} disabled label={`Выполнено ${count} из ${PER_LEVEL} заказов`} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold text-ink-3">Уровень {level} · <span className="tabular">{count}/{PER_LEVEL}</span></p>
+                  <h2 className={`mt-0.5 font-display text-xl font-bold leading-tight sm:text-2xl ${open ? 'text-ink' : 'text-ink-3'}`}>{info.name}</h2>
+                  <p className="mt-1 text-pretty text-[15px] font-semibold leading-snug text-ink-2">{info.description}</p>
+                  {coins > 0 && <p className="mt-2 inline-flex items-center gap-1 text-sm font-extrabold text-cheese-ink"><Icon name="coin" size={16} /> <span className="tabular">{coins}</span> монет</p>}
+                </div>
+                <span className={`hidden shrink-0 items-center gap-1.5 rounded-full px-4 py-2.5 font-display text-sm font-semibold sm:inline-flex ${open ? complete ? 'bg-basil-soft text-basil-ink' : 'bg-tomato text-white' : 'text-ink-3'}`}>
+                  {open ? <>{action} <Icon name="arrow" size={16} /></> : <><Icon name="lock" size={16} /> Закрыт</>}
+                </span>
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full sm:hidden ${open ? complete ? 'bg-basil-soft text-basil-ink' : 'bg-tomato text-white' : 'text-ink-3'}`} aria-hidden="true">
+                  <Icon name={open ? (complete ? 'check' : 'arrow') : 'lock'} size={20} />
+                </span>
+              </button>
+              {!open && <p className="mt-2 px-4 text-sm font-bold text-ink-3">Откроется после уровня {level - 1}</p>}
+            </motion.li>
+          )
+        })}
+      </ol>
+
+      {allDone && (
+        <button type="button" onClick={onReport} className="mt-6 inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-2xl bg-ink px-6 font-display font-semibold text-surface transition-colors hover:bg-ink/90 sm:w-auto">
+          Открыть разбор смены <Icon name="arrow" size={18} />
+        </button>
+      )}
+
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-5">
+        <p className="text-sm font-bold text-ink-3">Прогресс сохраняется на этом устройстве.</p>
+        <button type="button" onClick={onRestart} className="-mr-2 inline-flex min-h-[44px] items-center gap-2 rounded-xl px-3 text-sm font-extrabold text-tomato-ink transition-colors hover:bg-tomato-soft">
+          <Icon name="refresh" size={17} /> Начать заново
+        </button>
+      </div>
     </main>
   )
 }

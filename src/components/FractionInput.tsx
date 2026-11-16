@@ -1,26 +1,45 @@
 import { Pizza } from './Pizza'
 
-export function FractionInput({ numerator, denominator, fixedDenominator, onChange }: { numerator: string; denominator: string; fixedDenominator?: number; onChange: (next: { numerator: string; denominator: string }) => void }) {
-  const safeDenominator = Number(denominator)
-  const safeNumerator = Number(numerator)
-  const canPreview = Number.isInteger(safeDenominator) && safeDenominator > 0 && safeDenominator <= 12
-  const previewSelected = canPreview && Number.isInteger(safeNumerator) && safeNumerator > 0 ? Array.from({ length: Math.min(safeNumerator, safeDenominator) }, (_, index) => index) : []
+function Field({ id, label, value, onChange, readOnly, invalid }: { id: string; label: string; value: string; onChange?: (value: string) => void; readOnly?: boolean; invalid?: boolean }) {
   return (
-    <div className="grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_190px]">
-      <div className="flex items-center justify-center gap-3 rounded-2xl bg-[#FFF7D7] p-5 sm:justify-start">
-        <div className="flex flex-col items-center gap-2">
-          <label htmlFor="numerator" className="text-xs font-extrabold uppercase tracking-[.12em] text-[#8A6419]">числитель</label>
-          <input id="numerator" inputMode="numeric" type="number" min="0" max="24" value={numerator} onChange={(event) => onChange({ numerator: event.target.value, denominator })} className="h-16 w-20 rounded-xl border-2 border-[#E2BA43] bg-white text-center text-2xl font-black text-[#3D2A20] shadow-sm" aria-label="Числитель" />
-        </div>
-        <div className="mt-5 h-1 w-16 rounded-full bg-[#3D2A20]" />
-        <div className="flex flex-col items-center gap-2">
-          <label htmlFor="denominator" className="text-xs font-extrabold uppercase tracking-[.12em] text-[#8A6419]">знаменатель</label>
-          {fixedDenominator ? <div className="flex h-16 w-20 items-center justify-center rounded-xl border-2 border-[#E2BA43] bg-[#fffdf8] text-2xl font-black text-[#3D2A20]" aria-label={`Знаменатель ${fixedDenominator}`}>{fixedDenominator}</div> : <input id="denominator" inputMode="numeric" type="number" min="1" max="24" value={denominator} onChange={(event) => onChange({ numerator, denominator: event.target.value })} className="h-16 w-20 rounded-xl border-2 border-[#E2BA43] bg-white text-center text-2xl font-black text-[#3D2A20] shadow-sm" aria-label="Знаменатель" />}
-        </div>
+    <input
+      id={id}
+      aria-label={label}
+      inputMode="numeric"
+      autoComplete="off"
+      maxLength={2}
+      value={value}
+      readOnly={readOnly}
+      onChange={(event) => onChange?.(event.target.value.replace(/\D/g, '').slice(0, 2))}
+      className={`h-[72px] w-[88px] rounded-2xl border-2 text-center font-display text-4xl font-semibold tabular text-ink outline-none transition-colors duration-200 focus-visible:border-tomato focus-visible:outline-none ${readOnly ? 'border-transparent bg-sunk' : invalid ? 'border-tomato-ink bg-tomato-soft' : 'border-line bg-surface'}`}
+    />
+  )
+}
+
+export function FractionInput({ numerator, denominator, fixedDenominator, onChange, locked = false, invalid = false }: {
+  numerator: string
+  denominator: string
+  fixedDenominator?: number
+  onChange: (next: { numerator: string; denominator: string }) => void
+  locked?: boolean
+  invalid?: boolean
+}) {
+  const d = Number(denominator)
+  const n = Number(numerator)
+  const canPreview = Number.isInteger(d) && d > 0 && d <= 12
+  const shown = canPreview && Number.isInteger(n) && n > 0 ? Array.from({ length: Math.min(n, d) }, (_, i) => i) : []
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-5">
+      <div className="flex flex-col items-center gap-2" role="group" aria-label="Твой ответ дробью">
+        <Field id="numerator" label="Числитель" value={numerator} readOnly={locked} invalid={invalid} onChange={(value) => onChange({ numerator: value, denominator })} />
+        <span className="h-1.5 w-[104px] rounded-full bg-ink" aria-hidden="true" />
+        <Field id="denominator" label="Знаменатель" value={fixedDenominator ? String(fixedDenominator) : denominator} readOnly={locked || Boolean(fixedDenominator)} invalid={invalid && !fixedDenominator} onChange={(value) => onChange({ numerator, denominator: value })} />
       </div>
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-[#eadac8] bg-[#fffdf8] p-3">
-        {canPreview ? <Pizza cuts={safeDenominator} selected={previewSelected} size={132} showLabels={false} disabled /> : <div className="flex h-[132px] items-center justify-center text-center text-sm font-bold text-[#8C776B]">Введи знаменатель<br />от 1 до 12</div>}
-        <p className="mt-1 text-xs font-bold text-[#8C776B]">так выглядит твой ответ</p>
+      <div className="flex w-[168px] flex-col items-center gap-2">
+        {canPreview
+          ? <Pizza cuts={d} selected={shown} size={150} toppings={false} muted disabled label={`Твой ответ на пицце: ${shown.length} из ${d} частей`} />
+          : <div className="flex aspect-square w-[150px] items-center justify-center rounded-full border-2 border-dashed border-line bg-sunk/60 p-6 text-center text-sm font-bold leading-snug text-ink-3">Впиши знаменатель от 1 до 12</div>}
+        <p className="text-sm font-bold text-ink-3">так выглядит ответ</p>
       </div>
     </div>
   )

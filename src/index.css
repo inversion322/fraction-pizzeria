@@ -1,84 +1,98 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Design tokens. Warm pizzeria palette: cream paper, espresso ink, tomato,
+  basil, cheese. Components use these via Tailwind (see tailwind.config.js),
+  never raw hex.
+*/
 :root {
-  font-family: 'Nunito', ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #3d2a20;
-  background: #fff8ec;
+  --bg: 246 236 219;          /* cream paper */
+  --surface: 255 252 246;     /* ticket paper */
+  --sunk: 238 225 204;        /* pressed / track */
+  --line: 226 208 184;
+  --ink: 42 27 20;            /* espresso */
+  --ink-2: 94 70 54;
+  --ink-3: 120 96 80;
+  --tomato: 207 64 42;
+  --tomato-ink: 160 46 28;
+  --tomato-soft: 251 226 215;
+  --basil: 44 116 78;
+  --basil-ink: 30 92 60;
+  --basil-soft: 220 239 225;
+  --cheese: 242 180 49;
+  --cheese-ink: 128 88 10;
+  --cheese-soft: 252 237 196;
+  --crust: 200 119 58;
+  --kraft: 233 201 155;       /* pizza box cardboard */
+  --kraft-edge: 201 160 107;
+  --kraft-ink: 120 84 44;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-sm: 0 1px 2px rgb(var(--ink) / 0.06), 0 2px 8px -2px rgb(var(--ink) / 0.08);
+  --shadow-md: 0 1px 2px rgb(var(--ink) / 0.05), 0 12px 32px -12px rgb(var(--ink) / 0.22);
+  --shadow-lg: 0 2px 4px rgb(var(--ink) / 0.05), 0 24px 56px -20px rgb(var(--ink) / 0.32);
+
+  color-scheme: light;
+  font-family: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+  color: rgb(var(--ink));
+  background: rgb(var(--bg));
   font-synthesis: none;
-  --cream: #fff8ec;
-  --paper: #fffdf8;
-  --tomato: #d94f3d;
-  --tomato-dark: #ac382b;
-  --basil: #4d8b68;
-  --cheese: #f6c64c;
-  --cocoa: #3d2a20;
-  --muted: #8c776b;
-  --line: #eadac8;
-  --soft-red: #fff0eb;
-  --soft-green: #eaf6ed;
-  --soft-yellow: #fff7d7;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
-* { box-sizing: border-box; }
-html { min-width: 320px; background: var(--cream); }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream); }
-button, input, textarea { font: inherit; }
+html { min-width: 320px; background: rgb(var(--bg)); scrollbar-color: rgb(var(--line)) transparent; }
+body { margin: 0; min-height: 100dvh; background: rgb(var(--bg)); }
+button, input, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
-button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid rgba(217, 79, 61, 0.42); outline-offset: 3px; }
+button:disabled { cursor: not-allowed; }
 
-.paper-card {
-  background: var(--paper);
-  border: 1px solid rgba(234, 218, 200, 0.92);
-  border-radius: 24px;
-  box-shadow: 0 14px 38px rgba(103, 69, 48, 0.08), 0 2px 5px rgba(103, 69, 48, 0.04);
-}
+::selection { background: rgb(var(--cheese) / 0.55); color: rgb(var(--ink)); }
+input, textarea { caret-color: rgb(var(--tomato)); }
 
-.receipt {
-  position: relative;
-  background: #fffdf8;
-  border: 1px solid #eadac8;
-  border-radius: 18px 18px 11px 11px;
-  box-shadow: 0 12px 28px rgba(103, 69, 48, 0.08);
-}
-.receipt::after {
-  content: '';
-  position: absolute;
-  right: -1px;
-  bottom: -9px;
-  left: -1px;
-  height: 14px;
-  background: linear-gradient(135deg, transparent 7px, #fffdf8 0) 0 0 / 14px 14px repeat-x;
-  filter: drop-shadow(0 1px 0 #eadac8);
-}
+:focus-visible { outline: 3px solid rgb(var(--tomato) / 0.55); outline-offset: 3px; border-radius: 10px; }
 
-.eyebrow { color: var(--tomato); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; }
-.dotted-rule { border-top: 1px dashed #d9c5b3; }
+/* Numbers line up in counters and receipts. */
+.tabular { font-variant-numeric: tabular-nums; }
 .text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
 
-.pizza-shadow { filter: drop-shadow(0 14px 12px rgba(93, 55, 34, 0.17)); }
-.slice-button { transition: transform 180ms ease, filter 180ms ease; transform-origin: 50% 50%; }
-.slice-button:focus-visible { outline: none; stroke: #3D2A20; stroke-width: 6px; }
-.slice-button:hover { transform: translateY(-2px) scale(1.01); }
-.slice-button.selected { transform: translateY(-7px); filter: drop-shadow(0 8px 4px rgba(217, 79, 61, 0.18)); }
+/* Kitchen-ticket edge: a zigzag tear along the bottom. */
+.ticket-edge {
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 18px 100%;
+  padding-bottom: 9px;
+}
 
-.float-in { animation: float-in 480ms cubic-bezier(.2,.8,.2,1) both; }
-.feedback-in { animation: feedback-in 340ms cubic-bezier(.2,.8,.2,1) both; }
-.coin-pop { animation: coin-pop 650ms cubic-bezier(.2,.8,.2,1) both; }
-.sparkle { animation: sparkle 1.2s ease-in-out infinite; }
+/* Pizza slices: keyboard focus draws an ink outline on the crust. */
+.slice { outline: none; }
+.slice:focus-visible .slice-crust { stroke: rgb(var(--ink)); stroke-width: 5; }
+.slice-cheese { transition: filter 160ms var(--ease-out); }
+.slice[data-interactive='true']:hover .slice-cheese { filter: brightness(1.05) saturate(1.05); }
 
-@keyframes float-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes feedback-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes coin-pop { 0% { opacity: 0; transform: translateY(8px) scale(.7); } 55% { opacity: 1; transform: translateY(-11px) scale(1.05); } 100% { opacity: 0; transform: translateY(-28px) scale(.9); } }
-@keyframes sparkle { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-3px); } }
+/* Number fields without browser spinners. */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type='number'] { -moz-appearance: textfield; }
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(3px); }
+  30%, 50%, 70% { transform: translateX(-5px); }
+  40%, 60% { transform: translateX(5px); }
+}
+.shake { animation: shake 420ms var(--ease-out); }
+
+@keyframes topping-fall {
+  0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0px), 105vh, 0) rotate(var(--spin, 360deg)); opacity: 1; }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-}
-
-@media (max-width: 640px) {
-  .paper-card { border-radius: 19px; }
-  .receipt { border-radius: 15px 15px 10px 10px; }
+  .shake { animation: none; }
+  *, *::before, *::after { scroll-behavior: auto !important; }
 }

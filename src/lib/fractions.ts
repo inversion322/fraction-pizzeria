@@ -46,3 +46,21 @@ export function formatFraction(fraction: FractionValue, reduced = true): string 
 export function isEquivalent(a: FractionValue, b: FractionValue): boolean {
   return fractionEquals(a, b)
 }
+
+/** Parses "3/4", "1 1/2" or "2" into an (unreduced) fraction. */
+export function parseMixed(value: string): FractionValue {
+  const mixed = value.trim().match(/^(\d+)\s+(\d+)\/(\d+)$/)
+  if (mixed) {
+    const whole = Number(mixed[1]); const n = Number(mixed[2]); const d = Number(mixed[3])
+    return { numerator: whole * d + n, denominator: d }
+  }
+  return parseFraction(value) ?? { numerator: Number(value) || 0, denominator: 1 }
+}
+
+export function addFractions(values: FractionValue[]): FractionValue {
+  return reduceFraction(values.reduce((sum, f) => ({ numerator: sum.numerator * f.denominator + f.numerator * sum.denominator, denominator: sum.denominator * f.denominator }), { numerator: 0, denominator: 1 }))
+}
+
+export function toNumber(fraction: FractionValue): number {
+  return fraction.numerator / fraction.denominator
+}

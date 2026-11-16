@@ -1,7 +1,7 @@
 import { tasks } from '../data/tasks'
 import type { MisconceptionCode, StoredProgress, TaskResult } from '../types'
 
-const STORAGE_KEY = 'drob-pizzeria-progress-v1'
+const STORAGE_KEY = 'drob-pizzeria-progress-v2'
 
 export function loadProgress(): StoredProgress | null {
   try {
@@ -19,6 +19,7 @@ export function loadProgress(): StoredProgress | null {
       queueIds: queueIds.length ? queueIds : tasks.map((task) => task.id),
       coins: typeof parsed.coins === 'number' && Number.isFinite(parsed.coins) ? Math.max(0, parsed.coins) : 0,
       results,
+      fresh: parsed.fresh !== false,
     }
   } catch {
     return null

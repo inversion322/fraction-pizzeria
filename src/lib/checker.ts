@@ -1,6 +1,7 @@
 import { getMisconception } from '../data/misconceptions'
 import type { MisconceptionCode, Task } from '../types'
 import { fractionEquals, parseFraction } from './fractions'
+import { plural } from './plural'
 
 export interface CheckResult {
   correct: boolean
@@ -30,7 +31,7 @@ export function checkSlice(task: Task, answer: { cuts: number; selected: number[
   if (task.id === 'task-3' && answer.selected.length === 2) {
     return { correct: false, misconception: 'EQUIV', feedback: '2/8 — это четверть пиццы, а тебе нужна половина. Половина от 8 кусочков — это 4 кусочка.' }
   }
-  return { correct: false, misconception: 'GENERIC', feedback: `Сейчас выбрано ${answer.selected.length} кусочков. Подумай, сколько частей нужно взять.` }
+  return { correct: false, misconception: 'GENERIC', feedback: `Сейчас выбрано ${answer.selected.length} ${plural(answer.selected.length, 'кусок', 'куска', 'кусков')} из ${answer.cuts}. Подумай, сколько частей нужно взять.` }
 }
 
 export function checkFraction(task: Task, answer: { numerator: number; denominator: number }): CheckResult {
