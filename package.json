@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "check:tutor": "tsc scripts/check-tutor.ts --outDir node_modules/.tmp/check --module commonjs --target es2020 --moduleResolution node --skipLibCheck --lib es2020,dom && node node_modules/.tmp/check/scripts/check-tutor.js",
-    "check:worker": "tsc scripts/check-worker.ts --outDir node_modules/.tmp/check-worker --module commonjs --target es2022 --moduleResolution node --skipLibCheck --lib es2022,dom && node node_modules/.tmp/check-worker/scripts/check-worker.js"
+    "check:worker": "tsc scripts/check-worker.ts --outDir node_modules/.tmp/check-worker --module commonjs --target es2022 --moduleResolution node --skipLibCheck --lib es2022,dom && node node_modules/.tmp/check-worker/scripts/check-worker.js",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "dependencies": {
     "@fontsource-variable/nunito": "^5.3.0",

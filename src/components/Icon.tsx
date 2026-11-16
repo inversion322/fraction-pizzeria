@@ -26,5 +26,6 @@ export function Icon({ name, size = 22, ...props }: SVGProps<SVGSVGElement> & { 
     target: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r=".8" fill="currentColor" /></>,
     route: <><circle cx="6" cy="18" r="2" /><circle cx="18" cy="6" r="2" /><path d="M8 18h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7" /></>,
   }
-  return <svg aria-hidden="true" {...common}>{paths[name]}</svg>
+  // Icons never shrink next to long button labels.
+  return <svg aria-hidden="true" {...common} style={{ flexShrink: 0, ...props.style }}>{paths[name]}</svg>
 }
