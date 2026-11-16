@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "fraction-pizzeria-ai",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-16",
+  "observability": { "enabled": true },
+  "vars": {
+    // Who may call the proxy: the GitHub Pages site and local dev/preview servers.
+    "ALLOWED_ORIGINS": "https://inversion322.github.io,http://localhost:5173,http://localhost:4173",
+    "DEEPSEEK_MODEL": "deepseek-flash"
+  }
+  // The API key is a secret, never a var:  npx wrangler secret put DEEPSEEK_API_KEY
+}

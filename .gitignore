@@ -8,3 +8,5 @@ dist/
 *.log
 !.env.example
 .claude/
+worker/.dev.vars
+worker/node_modules/
