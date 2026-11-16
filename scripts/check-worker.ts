@@ -90,6 +90,13 @@ async function main() {
   const report = await r.json() as any
   expect('report shape (extra fields dropped)', r.status === 200 && report.summary && report.strengths.length === 1 && !('extra' in report), report)
 
+  // Internal codes never reach children
+  fake = fakeDeepSeek([JSON.stringify({ summary: 'Чаще всего ADD_ACROSS.', strengths: ['a'], focus: ['Ошибка WHOLE_PART'], nextSteps: ['c'] })])
+  r = await handle(post('/report', [{ topic: 'сложение', correctFirstTry: false, attempts: 2, usedHint: false, misconceptions: ['ADD_ACROSS'] }]), env, fake.upstream)
+  const scrubbed = JSON.stringify(await r.json())
+  const sentReport = String(fake.calls[0]?.body?.messages?.[1]?.content)
+  expect('codes are scrubbed from output and replaced by names in input', !/ADD_ACROSS|WHOLE_PART/.test(scrubbed) && scrubbed.includes('Складываю числители') && !sentReport.includes('ADD_ACROSS'), scrubbed)
+
   // Rate limit
   let limited = 0
   for (let i = 0; i < 45; i++) {

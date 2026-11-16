@@ -21,7 +21,17 @@ const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions'
 const DEFAULT_MODEL = 'deepseek-flash'
 const MAX_BODY_BYTES = 16_000
 const RATE_LIMIT = 40 // requests per IP per minute (best effort, per Worker instance)
-const CODES = ['DENOM_BIGGER', 'ADD_ACROSS', 'NO_COMMON_DENOM', 'EQUIV', 'WHOLE_PART']
+const CODE_NAMES: Record<string, string> = {
+  DENOM_BIGGER: '«Больше знаменатель — больше кусок»',
+  ADD_ACROSS: '«Складываю числители и знаменатели»',
+  NO_COMMON_DENOM: '«Забываю общий знаменатель»',
+  EQUIV: '«Не вижу равные дроби»',
+  WHOLE_PART: '«Путаюсь с целой частью»',
+}
+const CODES = Object.keys(CODE_NAMES)
+/** Children must never see internal codes like ADD_ACROSS: send names to the model, scrub codes from its output. */
+const named = (codes: string[]) => codes.map((c) => CODE_NAMES[c] ?? c)
+const humanize = (text: string) => text.replace(/\b(DENOM_BIGGER|ADD_ACROSS|NO_COMMON_DENOM|EQUIV|WHOLE_PART|GENERIC)\b/g, (code) => CODE_NAMES[code] ?? 'ошибка')
 const EVENTS = ['start', 'correct', 'almost', 'wrong', 'reveal', 'question', 'next']
 
 // ---------- small validation helpers ----------
@@ -59,7 +69,7 @@ const ROUTES: Record<string, Route> = {
       return { event: b.event, fallback, task, shift, history, studentMessage: str(b.studentMessage, 300) }
     },
     shape: (out, input) => {
-      const reply = str(out.reply, 900)?.trim()
+      const reply = humanize(str(out.reply, 900)?.trim() ?? '')
       if (!reply) return null
       // Safety net: while the student is still solving, the reply must not give the answer away.
       const task = input.task as { text?: string; answer?: string } | undefined
@@ -73,10 +83,11 @@ const ROUTES: Record<string, Route> = {
     maxTokens: 350,
     validate: (b) => {
       if (!isObj(b) || !['order', 'whole', 'boxes'].includes(String(b.puzzle))) return null
-      return { puzzle: b.puzzle, task: str(b.task, 300), mistakes: Math.max(0, Math.min(50, num(b.mistakes) ?? 0)), moves: strList(b.moves, 30, 160) ?? [], misconceptions: (strList(b.misconceptions, 20, 20) ?? []).filter((c) => CODES.includes(c)) }
+      const codes = (strList(b.misconceptions, 20, 20) ?? []).filter((c) => CODES.includes(c))
+      return { puzzle: b.puzzle, task: str(b.task, 300), mistakes: Math.max(0, Math.min(50, num(b.mistakes) ?? 0)), moves: strList(b.moves, 30, 160) ?? [], misconceptions: codes, misconceptionNames: named(codes) }
     },
     shape: (out) => {
-      const feedback = str(out.feedback, 700)?.trim()
+      const feedback = humanize(str(out.feedback, 700)?.trim() ?? '')
       if (!feedback) return null
       const code = typeof out.misconception === 'string' && CODES.includes(out.misconception) ? out.misconception : undefined
       return code ? { feedback, misconception: code } : { feedback }
@@ -89,13 +100,13 @@ const ROUTES: Record<string, Route> = {
       if (!Array.isArray(b) || !b.length) return null
       const results = b.filter(isObj).slice(0, 20).map((r) => ({
         topic: str(r.topic, 80), correctFirstTry: r.correctFirstTry === true, attempts: num(r.attempts), usedHint: r.usedHint === true,
-        misconceptions: (strList(r.misconceptions, 5, 20) ?? []).filter((c) => CODES.includes(c)), moves: strList(r.moves, 12, 120),
+        mistakes: named((strList(r.misconceptions, 5, 20) ?? []).filter((c) => CODES.includes(c))), moves: strList(r.moves, 12, 120),
       }))
       return { total: results.length, firstTry: results.filter((r) => r.correctFirstTry).length, results }
     },
     shape: (out) => {
-      const summary = str(out.summary, 600)?.trim()
-      const list = (v: unknown) => (strList(v, 4, 200) ?? []).map((x) => x.trim()).filter(Boolean)
+      const summary = humanize(str(out.summary, 600)?.trim() ?? '')
+      const list = (v: unknown) => (strList(v, 4, 200) ?? []).map((x) => humanize(x.trim())).filter(Boolean)
       const strengths = list(out.strengths)
       const focus = list(out.focus)
       const nextSteps = list(out.nextSteps)

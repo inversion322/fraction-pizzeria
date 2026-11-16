@@ -105,5 +105,5 @@ npx wrangler deploy                      # выдаст адрес https://fract
 - [x] Интерфейс (Manus) и редизайн
 - [x] ИИ-прокси (Cloudflare Worker + DeepSeek), проверен на подменённом API
 - [x] Развёртывание прокси: https://fraction-pizzeria-ai.fraction-pizzeria-ai.workers.dev
-- [ ] Проверка на мобильных и десктопе
+- [x] Проверка на мобильных и десктопе, сквозная проверка живого сайта с DeepSeek
 - [x] Деплой на GitHub Pages через GitHub Actions (перед сборкой — проверки генератора и прокси)
