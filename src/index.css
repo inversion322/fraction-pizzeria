@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Nunito', ui-rounded, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #3d2a20;
+  background: #fff8ec;
+  font-synthesis: none;
+  --cream: #fff8ec;
+  --paper: #fffdf8;
+  --tomato: #d94f3d;
+  --tomato-dark: #ac382b;
+  --basil: #4d8b68;
+  --cheese: #f6c64c;
+  --cocoa: #3d2a20;
+  --muted: #8c776b;
+  --line: #eadac8;
+  --soft-red: #fff0eb;
+  --soft-green: #eaf6ed;
+  --soft-yellow: #fff7d7;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; background: var(--cream); }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream); }
+button, input, textarea { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid rgba(217, 79, 61, 0.42); outline-offset: 3px; }
+
+.paper-card {
+  background: var(--paper);
+  border: 1px solid rgba(234, 218, 200, 0.92);
+  border-radius: 24px;
+  box-shadow: 0 14px 38px rgba(103, 69, 48, 0.08), 0 2px 5px rgba(103, 69, 48, 0.04);
+}
+
+.receipt {
+  position: relative;
+  background: #fffdf8;
+  border: 1px solid #eadac8;
+  border-radius: 18px 18px 11px 11px;
+  box-shadow: 0 12px 28px rgba(103, 69, 48, 0.08);
+}
+.receipt::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  bottom: -9px;
+  left: -1px;
+  height: 14px;
+  background: linear-gradient(135deg, transparent 7px, #fffdf8 0) 0 0 / 14px 14px repeat-x;
+  filter: drop-shadow(0 1px 0 #eadac8);
+}
+
+.eyebrow { color: var(--tomato); font-size: 0.72rem; font-weight: 900; letter-spacing: 0.13em; text-transform: uppercase; }
+.dotted-rule { border-top: 1px dashed #d9c5b3; }
+.text-balance { text-wrap: balance; }
+
+.pizza-shadow { filter: drop-shadow(0 14px 12px rgba(93, 55, 34, 0.17)); }
+.slice-button { transition: transform 180ms ease, filter 180ms ease; transform-origin: 50% 50%; }
+.slice-button:focus-visible { outline: none; stroke: #3D2A20; stroke-width: 6px; }
+.slice-button:hover { transform: translateY(-2px) scale(1.01); }
+.slice-button.selected { transform: translateY(-7px); filter: drop-shadow(0 8px 4px rgba(217, 79, 61, 0.18)); }
+
+.float-in { animation: float-in 480ms cubic-bezier(.2,.8,.2,1) both; }
+.feedback-in { animation: feedback-in 340ms cubic-bezier(.2,.8,.2,1) both; }
+.coin-pop { animation: coin-pop 650ms cubic-bezier(.2,.8,.2,1) both; }
+.sparkle { animation: sparkle 1.2s ease-in-out infinite; }
+
+@keyframes float-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes feedback-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes coin-pop { 0% { opacity: 0; transform: translateY(8px) scale(.7); } 55% { opacity: 1; transform: translateY(-11px) scale(1.05); } 100% { opacity: 0; transform: translateY(-28px) scale(.9); } }
+@keyframes sparkle { 0%, 100% { transform: rotate(-3deg) translateY(0); } 50% { transform: rotate(3deg) translateY(-3px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+@media (max-width: 640px) {
+  .paper-card { border-radius: 19px; }
+  .receipt { border-radius: 15px 15px 10px 10px; }
+}

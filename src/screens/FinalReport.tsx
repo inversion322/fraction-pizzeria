@@ -1,0 +1,30 @@
+import { useEffect, useMemo, useState } from 'react'
+import { getMisconception } from '../data/misconceptions'
+import { getFinalReport } from '../lib/ai'
+import type { FinalReport as Report, TaskResult } from '../types'
+import { ChefTosha } from '../components/ChefTosha'
+import { Icon } from '../components/Icon'
+
+export function FinalReport({ results, coins, onPlayAgain, onRetryMistakes }: { results: TaskResult[]; coins: number; onPlayAgain: () => void; onRetryMistakes: () => void }) {
+  const [report, setReport] = useState<Report | null>(null)
+  useEffect(() => { let active = true; getFinalReport(results).then((next) => { if (active) setReport(next) }); return () => { active = false } }, [results])
+  const firstTry = results.filter((result) => result.correctFirstTry).length
+  const rating = firstTry >= 10 ? 3 : firstTry >= 6 ? 2 : 1
+  const diagnosis = useMemo(() => { const counts = new Map<string, number>(); results.flatMap((result) => result.misconceptions).filter((code) => code !== 'GENERIC').forEach((code) => counts.set(code, (counts.get(code) ?? 0) + 1)); const top = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]; return top ? getMisconception(top as Parameters<typeof getMisconception>[0]) : null }, [results])
+  return (
+    <main className="mx-auto max-w-5xl px-4 pb-14 pt-7 sm:px-8 sm:pt-10">
+      <div className="text-center"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F6C64C] text-3xl shadow-[0_6px_0_#D9A92D]">✦</div><p className="eyebrow mt-7">разбор смены от шефа Тоши</p><h1 className="mt-2 text-4xl font-black tracking-tight text-[#3D2A20] sm:text-5xl">Ты справился с 12 заказами</h1><p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-[#8C776B]">Давай посмотрим не только на баллы, но и на то, как ты думаешь.</p></div>
+      <div className="mt-9 grid gap-3 sm:grid-cols-3"><div className="paper-card p-5 text-center"><p className="text-3xl font-black text-[#D94F3D]">{coins}</p><p className="mt-1 text-sm font-bold text-[#8C776B]">монет заработано</p></div><div className="paper-card p-5 text-center"><p className="text-3xl font-black text-[#4D8B68]">{firstTry}<span className="text-xl text-[#b5a093">/12</span></p><p className="mt-1 text-sm font-bold text-[#8C776B]">с первого раза</p></div><div className="paper-card p-5 text-center"><p className="text-3xl tracking-[.1em] text-[#F6C64C]">{[1, 2, 3].map((star) => <span key={star} className={star <= rating ? '' : 'text-[#E7D9CA]'}>★</span>)}</p><p className="mt-1 text-sm font-bold text-[#8C776B]">рейтинг смены</p></div></div>
+      <section className="mt-5 grid gap-5 lg:grid-cols-[.9fr_1.1fr]">
+        <article className="paper-card overflow-hidden"><div className="bg-[#FFF0EB] p-5 sm:p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">диагноз</p><h2 className="mt-1 text-2xl font-black text-[#3D2A20]">{diagnosis ? diagnosis.name : 'Мастер дробей'}</h2></div><span className="text-3xl">{diagnosis ? '🔎' : '🏆'}</span></div></div><div className="p-5 sm:p-6"><p className="text-sm leading-6 text-[#6d5546]">{diagnosis ? diagnosis.explanation : 'Ты не оставил повторяющихся ошибок. Похоже, ты уже уверенно сравниваешь, складываешь и сокращаешь дроби.'}</p><div className="mt-5 rounded-2xl bg-[#FFF7D7] p-4"><p className="text-xs font-black uppercase tracking-[.12em] text-[#9A7625]">пример правильной мысли</p><p className="mt-2 text-sm font-extrabold leading-6 text-[#6d5546]">{diagnosis ? diagnosis.example : 'Сначала смотри на размер кусочка, затем выбирай действие.'}</p></div></div></article>
+        <article className="paper-card p-5 sm:p-6"><div className="flex items-center gap-3"><ChefTosha compact /><div><p className="eyebrow">личная заметка</p><h2 className="mt-1 text-2xl font-black text-[#3D2A20]">Шеф говорит</h2></div></div>{report ? <div className="mt-5 space-y-5"><p className="text-base leading-7 text-[#6d5546]">{report.summary}</p><div className="grid gap-4 sm:grid-cols-3"><ReportList title="Получается хорошо" items={report.strengths} tone="green" /><ReportList title="Стоит потренировать" items={report.focus} tone="red" /><ReportList title="Что сделать дальше" items={report.nextSteps} tone="yellow" /></div></div> : <div className="mt-6 space-y-3"><div className="h-4 w-11/12 animate-pulse rounded-full bg-[#F1E5D9]" /><div className="h-4 w-8/12 animate-pulse rounded-full bg-[#F1E5D9]" /><div className="grid gap-3 pt-3 sm:grid-cols-3"><div className="h-24 animate-pulse rounded-2xl bg-[#F1E5D9]" /><div className="h-24 animate-pulse rounded-2xl bg-[#F1E5D9]" /><div className="h-24 animate-pulse rounded-2xl bg-[#F1E5D9]" /></div><p className="text-sm font-bold text-[#8C776B]">Шеф Тоша читает твой отчёт…</p></div>}</article>
+      </section>
+      <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row"><button type="button" onClick={onPlayAgain} className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-2xl bg-[#D94F3D] px-6 py-3 font-black text-white shadow-[0_5px_0_#AC382B] transition hover:-translate-y-0.5"><Icon name="refresh" size={18} /> Пройти заново</button><button type="button" onClick={onRetryMistakes} className="inline-flex min-h-[50px] items-center justify-center gap-2 rounded-2xl border-2 border-[#eadac8] bg-[#fffdf8] px-6 py-3 font-black text-[#6d5546] transition hover:border-[#D94F3D]"><Icon name="book" size={18} /> Повторить только ошибки</button></div>
+    </main>
+  )
+}
+
+function ReportList({ title, items, tone }: { title: string; items: string[]; tone: 'green' | 'red' | 'yellow' }) {
+  const colors = { green: 'bg-[#EAF6ED] text-[#356B4D]', red: 'bg-[#FFF0EB] text-[#AC382B]', yellow: 'bg-[#FFF7D7] text-[#8A6419]' }
+  return <div className="rounded-2xl bg-[#fffaf5] p-3"><p className={`rounded-lg px-2 py-1 text-[11px] font-black leading-4 ${colors[tone]}`}>{title}</p><ul className="mt-2 space-y-2">{items.map((item) => <li key={item} className="flex gap-2 text-xs font-bold leading-5 text-[#6d5546]"><span className="mt-1 text-[#D94F3D]">•</span><span>{item}</span></li>)}</ul></div>
+}
