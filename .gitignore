@@ -10,3 +10,6 @@ dist/
 .claude/
 worker/.dev.vars
 worker/node_modules/
+
+# Private submission notes (kept locally)
+docs/SUBMISSION.md
